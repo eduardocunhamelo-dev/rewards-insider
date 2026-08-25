@@ -16,7 +16,27 @@
     min-height:100vh;padding:20px clamp(14px,3vw,34px) 60px}
   .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
   .wrap{max-width:1240px;margin:0 auto}
+  .hidden{display:none !important}
 
+  /* LOGIN */
+  .login-wrap{max-width:400px;margin:9vh auto 0}
+  .login-logo{height:34px;margin:0 auto 20px;display:block}
+  .login-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:30px 26px}
+  .login-card h1{font-family:Archivo;font-size:19px;margin-bottom:4px}
+  .login-card h1 span{color:var(--green)}
+  .login-card .ctl{font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:18px}
+  .login-card label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px}
+  .login-card input{width:100%;background:#0C1119;border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:12px 13px;font-family:Inter;font-size:14px}
+  .login-card input:focus{outline:none;border-color:rgba(0,252,132,.5)}
+  .login-btn{width:100%;margin-top:20px;background:var(--green);color:#05230f;border:none;font-family:Inter;
+    font-weight:700;font-size:14px;padding:12px;border-radius:9px;cursor:pointer}
+  .login-btn:hover{filter:brightness(1.08)}
+  .login-btn:disabled{opacity:.6}
+  .login-msg{margin-top:14px;font-size:13px;padding:10px 12px;border-radius:8px;display:none}
+  .login-msg.err{display:block;background:rgba(255,96,96,.1);border:1px solid rgba(255,96,96,.3);color:var(--red)}
+
+  /* APP */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
     padding-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:12px}
@@ -27,6 +47,7 @@
     padding:3px 8px;border-radius:6px;text-transform:uppercase}
   .who{font-size:13px;color:var(--muted)}
   .who b{color:var(--text)}
+  .logout{font-size:12px;color:var(--muted);background:0;border:1px solid var(--line);padding:6px 11px;border-radius:8px;cursor:pointer;margin-left:12px}
 
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
   @media(max-width:720px){.kpis{grid-template-columns:repeat(2,1fr)}}
@@ -50,7 +71,6 @@
   .st.on .b{background:var(--green);color:#05230f}
 
   .card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
-  .rowlist{display:flex;flex-direction:column}
   .r{display:grid;grid-template-columns:1.4fr 1.3fr .7fr .8fr auto;gap:14px;align-items:center;
     padding:15px 18px;border-bottom:1px solid var(--line)}
   .r:last-child{border-bottom:0}
@@ -80,7 +100,6 @@
   .pill.recusado{background:rgba(255,96,96,.15);color:var(--red)}
   .empty{padding:40px;text-align:center;color:var(--muted);font-size:14px}
 
-  /* estoque */
   .stock-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:12px}
   .stock-head h3{font-family:Archivo;font-size:14px;letter-spacing:.1em;text-transform:uppercase}
   .strow{display:grid;grid-template-columns:2fr 1fr 1fr 1.1fr auto;gap:14px;align-items:center;
@@ -95,12 +114,10 @@
   .st-off{opacity:.45}
   .coininline{width:15px;height:15px;vertical-align:middle;margin-right:5px}
   .thumb{width:44px;height:44px;border-radius:9px;border:1px dashed var(--line);display:inline-flex;
-    align-items:center;justify-content:center;background:#0C1119;cursor:pointer;overflow:hidden;flex:none;
-    color:var(--muted);font-size:20px;line-height:1}
+    align-items:center;justify-content:center;background:#0C1119;cursor:pointer;overflow:hidden;flex:none;color:var(--muted);font-size:20px}
   .thumb:hover{border-color:rgba(0,252,132,.5)}
   .thumb img{width:100%;height:100%;object-fit:cover}
 
-  /* modais */
   .ov{position:fixed;inset:0;background:rgba(4,6,9,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
   .ov.show{display:flex}
   .modal{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px}
@@ -117,17 +134,37 @@
     border:1px solid rgba(0,252,132,.4);padding:13px 20px;border-radius:12px;font-size:13.5px;
     z-index:80;font-weight:500;box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1}
+  .loading{text-align:center;color:var(--muted);padding:60px;font-size:14px}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- LOGIN -->
+<div id="view-login" class="login-wrap hidden">
+  <img class="login-logo" src="logo.png" alt="Insider" />
+  <div class="login-card">
+    <h1>Insider <span>Rewards</span></h1>
+    <div class="ctl">Painel de Controle</div>
+    <label>E-mail</label>
+    <input id="login-email" type="email" placeholder="voce@insiderinveste.com" autocomplete="username" />
+    <label>Senha</label>
+    <input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-msg" id="login-msg"></div>
+  </div>
+</div>
+
+<div id="view-loading" class="loading">Carregando…</div>
+
+<!-- APP -->
+<div id="view-app" class="wrap hidden">
   <div class="topbar">
     <div class="brand">
       <img src="logo.png" alt="Insider"/>
       <h1>Insider <span>Rewards</span></h1>
       <span class="tagctrl">Controle</span>
     </div>
-    <div class="who">Operador: <b>Equipe Insider</b></div>
+    <div class="who">Operador: <b id="whoami"></b><button class="logout" onclick="logout()">Sair</button></div>
   </div>
 
   <div class="kpis">
@@ -142,14 +179,12 @@
     <button class="mt" data-main="est" onclick="setMain('est')">Estoque</button>
   </div>
 
-  <!-- SOLICITAÇÕES -->
   <div id="pane-sol">
     <div class="subtabs" id="subtabs"></div>
-    <div class="card"><div class="rowlist" id="redlist"></div></div>
+    <div class="card"><div id="redlist"></div></div>
   </div>
 
-  <!-- ESTOQUE -->
-  <div id="pane-est" style="display:none">
+  <div id="pane-est" class="hidden">
     <div class="stock-head">
       <h3>Catálogo &amp; estoque</h3>
       <button class="btn ok" onclick="openAdd()">+ Cadastrar item</button>
@@ -161,137 +196,121 @@
   </div>
 </div>
 
-<!-- modal recusar -->
-<div class="ov" id="ov-reject">
-  <div class="modal">
-    <h3>Recusar resgate</h3>
-    <p id="reject-info"></p>
-    <label>Motivo (o cliente recebe os coins de volta)</label>
-    <textarea id="reject-reason" rows="3" placeholder="Ex.: item indisponível, dados incompletos..."></textarea>
-    <div class="actions">
-      <button class="btn" onclick="closeOv('ov-reject')">Cancelar</button>
-      <button class="btn no" onclick="confirmReject()">Recusar e devolver coins</button>
-    </div>
-  </div>
-</div>
+<!-- modais -->
+<div class="ov" id="ov-reject"><div class="modal">
+  <h3>Recusar resgate</h3><p id="reject-info"></p>
+  <label>Motivo (o cliente recebe os coins de volta)</label>
+  <textarea id="reject-reason" rows="3" placeholder="Ex.: item indisponível, dados incompletos..."></textarea>
+  <div class="actions"><button class="btn" onclick="closeOv('ov-reject')">Cancelar</button>
+  <button class="btn no" onclick="confirmReject()">Recusar e devolver coins</button></div>
+</div></div>
 
-<!-- modal enviar -->
-<div class="ov" id="ov-ship">
-  <div class="modal">
-    <h3>Marcar como enviado</h3>
-    <p id="ship-info"></p>
-    <label>Código de rastreio (opcional)</label>
-    <input id="ship-track" placeholder="Ex.: BR123456789BR" />
-    <div class="actions">
-      <button class="btn" onclick="closeOv('ov-ship')">Cancelar</button>
-      <button class="btn ship" onclick="confirmShip()">Confirmar envio</button>
-    </div>
-  </div>
-</div>
+<div class="ov" id="ov-ship"><div class="modal">
+  <h3>Marcar como enviado</h3><p id="ship-info"></p>
+  <label>Código de rastreio (opcional)</label><input id="ship-track" placeholder="Ex.: BR123456789BR" />
+  <div class="actions"><button class="btn" onclick="closeOv('ov-ship')">Cancelar</button>
+  <button class="btn ship" onclick="confirmShip()">Confirmar envio</button></div>
+</div></div>
 
-<!-- modal add item -->
-<div class="ov" id="ov-add">
-  <div class="modal">
-    <h3 id="add-title">Cadastrar item</h3>
-    <p>Preencha os dados do novo brinde da loja.</p>
-    <label>Nome do item</label>
-    <input id="add-name" placeholder="Ex.: Camiseta Insider Preta" />
-    <div class="grid2">
-      <div><label>Categoria</label>
-        <select id="add-cat"><option value="físico">Físico</option><option value="digital">Digital</option><option value="cupom">Cupom</option></select>
-      </div>
-      <div><label>Preço em coins</label><input id="add-price" type="number" placeholder="7000" /></div>
-    </div>
-    <label>Estoque (deixe vazio p/ ilimitado — digital/cupom)</label>
-    <input id="add-stock" type="number" placeholder="150" />
-    <label>Foto do produto (opcional)</label>
-    <input id="add-img" type="file" accept="image/*" onchange="previewAddImg(this)" />
-    <img id="add-img-preview" style="display:none;margin-top:10px;max-height:130px;border-radius:10px;border:1px solid var(--line)" />
-    <div class="actions">
-      <button class="btn" onclick="closeOv('ov-add')">Cancelar</button>
-      <button class="btn ok" onclick="saveItem()">Salvar item</button>
-    </div>
+<div class="ov" id="ov-add"><div class="modal">
+  <h3>Cadastrar item</h3><p>Preencha os dados do novo brinde da loja.</p>
+  <label>Nome do item</label><input id="add-name" placeholder="Ex.: Camiseta Insider Preta" />
+  <div class="grid2">
+    <div><label>Categoria</label><select id="add-cat"><option value="físico">Físico</option><option value="digital">Digital</option><option value="cupom">Cupom</option></select></div>
+    <div><label>Preço em coins</label><input id="add-price" type="number" placeholder="7000" /></div>
   </div>
-</div>
+  <label>Estoque (vazio = ilimitado)</label><input id="add-stock" type="number" placeholder="150" />
+  <label>Foto do produto (opcional)</label>
+  <input id="add-img" type="file" accept="image/*" onchange="previewAddImg(this)" />
+  <img id="add-img-preview" style="display:none;margin-top:10px;max-height:130px;border-radius:10px;border:1px solid var(--line)" />
+  <div class="actions"><button class="btn" onclick="closeOv('ov-add')">Cancelar</button>
+  <button class="btn ok" id="add-save" onclick="saveItem()">Salvar item</button></div>
+</div></div>
 
 <input type="file" id="rowImgInput" accept="image/*" style="display:none" onchange="rowImgChange(this)" />
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  var SUPABASE_URL = "https://vnfphidoellblevkinmz.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_GTNiocsSJRVT7S0gRPre4w_zf1lDIaC";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   var COIN = "coin.png";
-  var STAFF = "Equipe Insider";
-
-  var CATALOG = [
-    {id:"adesivos",name:"Pack de adesivos",cat:"físico",price:1000,stock:500,active:true},
-    {id:"caneca",name:"Caneca Insider",cat:"físico",price:3600,stock:200,active:true},
-    {id:"cupom50",name:"Cupom R$50 OFF",cat:"cupom",price:5000,stock:null,active:true},
-    {id:"mousepad",name:"Mousepad gamer",cat:"físico",price:5000,stock:200,active:true},
-    {id:"bone",name:"Boné Insider",cat:"físico",price:7000,stock:150,active:true},
-    {id:"reset",name:"Reset grátis de challenge",cat:"digital",price:8000,stock:null,active:true},
-    {id:"camiseta",name:"Camiseta Insider",cat:"físico",price:9000,stock:0,active:true},
-    {id:"moletom",name:"Moletom Insider",cat:"físico",price:20000,stock:80,active:true},
-    {id:"challenge",name:"Challenge grátis",cat:"digital",price:25000,stock:null,active:true},
-    {id:"curso",name:"Curso De Zero a Trader",cat:"digital",price:50000,stock:null,active:true}
-  ];
-
-  var A1={nome:"João Pedro Alves",cpf:"111.222.333-44",tel:"(31) 99999-1234",cep:"30110-000",rua:"Av. Afonso Pena",num:"1500",comp:"Ap 302",bairro:"Centro",cidade:"Belo Horizonte",uf:"MG"};
-  var A2={nome:"Marina Costa",cpf:"222.333.444-55",tel:"(11) 98888-4321",cep:"01310-100",rua:"Av. Paulista",num:"900",comp:"",bairro:"Bela Vista",cidade:"São Paulo",uf:"SP"};
-  var A3={nome:"Rafael Souza",cpf:"333.444.555-66",tel:"(21) 97777-0000",cep:"22071-900",rua:"Av. Atlântica",num:"200",comp:"Bloco B",bairro:"Copacabana",cidade:"Rio de Janeiro",uf:"RJ"};
-  var A4={nome:"Lucas Lima",cpf:"444.555.666-77",tel:"(41) 96666-1111",cep:"80010-010",rua:"Rua XV de Novembro",num:"55",comp:"",bairro:"Centro",cidade:"Curitiba",uf:"PR"};
-
-  var REDS = [
-    {id:"r1",cli:"João Pedro Alves",email:"joao@email.com",item:"Boné Insider",cat:"físico",coins:7000,date:"22/08 09:14",status:"pendente",addr:A1},
-    {id:"r2",cli:"Marina Costa",email:"marina@email.com",item:"Moletom Insider",cat:"físico",coins:20000,date:"22/08 08:02",status:"pendente",addr:A2},
-    {id:"r6",cli:"Bruno Dias",email:"bruno@email.com",item:"Cupom R$50 OFF",cat:"cupom",coins:5000,date:"22/08 07:30",status:"pendente",addr:null},
-    {id:"r3",cli:"Rafael Souza",email:"rafael@email.com",item:"Caneca Insider",cat:"físico",coins:3600,date:"21/08 17:40",status:"aprovado",addr:A3},
-    {id:"r4",cli:"Lucas Lima",email:"lucas@email.com",item:"Mousepad gamer",cat:"físico",coins:5000,date:"20/08 11:20",status:"enviado",tracking:"BR123456789BR",addr:A4},
-    {id:"r5",cli:"Ana Beatriz",email:"ana@email.com",item:"Pack de adesivos",cat:"físico",coins:1000,date:"19/08 10:00",status:"entregue",addr:A1}
-  ];
-
+  var staffEmail = null;
+  var CATALOG = [], REDS = [];
+  var sub = "pendente", main = "sol", ctx = null, addImgData=null, currentImgId=null;
   var SUBS = [
-    {k:"pendente",label:"Pendentes"},
-    {k:"aprovado",label:"A enviar"},
-    {k:"enviado",label:"Enviados"},
-    {k:"entregue",label:"Entregues"},
-    {k:"recusado",label:"Recusados"}
+    {k:"pendente",label:"Pendentes"},{k:"aprovado",label:"A enviar"},
+    {k:"enviado",label:"Enviados"},{k:"entregue",label:"Entregues"},{k:"recusado",label:"Recusados"}
   ];
-  var sub = "pendente";
-  var main = "sol";
-  var ctx = null; // resgate em ação nos modais
 
-  function fmt(n){return n.toLocaleString("pt-BR");}
-  function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2600);}
+  function fmt(n){return (n||0).toLocaleString("pt-BR");}
+  function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2800);}
   function coinImg(sz){return '<img class="coininline" src="'+COIN+'" style="width:'+sz+'px;height:'+sz+'px"/>';}
+  function openOv(id){document.getElementById(id).classList.add("show");}
+  function closeOv(id){document.getElementById(id).classList.remove("show");}
+  function showView(v){ ["login","loading","app"].forEach(function(x){ document.getElementById("view-"+x).classList.toggle("hidden", x!==v); }); }
 
-  function setMain(m){
-    main=m;
+  // ---------- AUTH (email + senha) ----------
+  async function doLogin(){
+    var email=document.getElementById("login-email").value.trim();
+    var pass=document.getElementById("login-pass").value;
+    var msg=document.getElementById("login-msg"); var btn=document.getElementById("login-btn");
+    msg.className="login-msg";
+    if(!email||!pass){ msg.className="login-msg err"; msg.textContent="Preencha e-mail e senha."; return; }
+    btn.disabled=true; btn.textContent="Entrando…";
+    var res=await sb.auth.signInWithPassword({email:email,password:pass});
+    btn.disabled=false; btn.textContent="Entrar";
+    if(res.error){ msg.className="login-msg err"; msg.textContent="E-mail ou senha inválidos."; return; }
+    boot();
+  }
+  async function logout(){ await sb.auth.signOut(); location.reload(); }
+
+  // ---------- verifica se é staff ----------
+  async function isStaff(email){
+    var res = await sb.from("staff").select("email,active").eq("email", email.toLowerCase()).maybeSingle();
+    return !!(res.data && res.data.active);
+  }
+
+  // ---------- DADOS ----------
+  async function loadAll(){
+    var cat = await sb.from("rewards_catalog").select("id,name,category,coin_price,stock,image_url,active").order("coin_price");
+    CATALOG = (cat.data||[]).map(function(c){ return {id:c.id,name:c.name,cat:c.category,price:c.coin_price,stock:c.stock,active:c.active,img:c.image_url}; });
+    var rd = await sb.from("redemptions_admin").select("*");
+    REDS = (rd.data||[]).map(function(r){
+      var sh = r.shipping||{};
+      return { id:r.id, cli:r.cliente||r.email, email:r.email, item:r.item, cat:r.category,
+               coins:r.coins_spent, date:new Date(r.created_at).toLocaleDateString("pt-BR"),
+               status:r.status, tracking:r.tracking_code,
+               addr: (sh && sh.nome)? sh : null };
+    });
+  }
+  async function refresh(){ await loadAll(); render(); }
+
+  // ---------- RENDER ----------
+  function setMain(m){ main=m;
     document.querySelectorAll(".mt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-main")===m);});
-    document.getElementById("pane-sol").style.display = m==="sol"?"block":"none";
-    document.getElementById("pane-est").style.display = m==="est"?"block":"none";
+    document.getElementById("pane-sol").classList.toggle("hidden", m!=="sol");
+    document.getElementById("pane-est").classList.toggle("hidden", m!=="est");
     render();
   }
   function setSub(k){ sub=k; render(); }
-
   function kpis(){
     document.getElementById("k-pend").textContent = REDS.filter(function(r){return r.status==="pendente";}).length;
     document.getElementById("k-env").textContent  = REDS.filter(function(r){return r.status==="aprovado";}).length;
     document.getElementById("k-sent").textContent = REDS.filter(function(r){return r.status==="enviado";}).length;
     document.getElementById("k-out").textContent  = CATALOG.filter(function(c){return c.stock===0;}).length;
   }
-
   function render(){
     kpis();
-    // subtabs
     var stc=document.getElementById("subtabs"); stc.innerHTML="";
     SUBS.forEach(function(s){
       var n=REDS.filter(function(r){return r.status===s.k;}).length;
-      var b=document.createElement("button");
-      b.className="st"+(sub===s.k?" on":"");
-      b.innerHTML=s.label+'<span class="b">'+n+'</span>';
-      b.onclick=function(){setSub(s.k);};
+      var b=document.createElement("button"); b.className="st"+(sub===s.k?" on":"");
+      b.innerHTML=s.label+'<span class="b">'+n+'</span>'; b.onclick=function(){setSub(s.k);};
       stc.appendChild(b);
     });
-    // lista
     var list=document.getElementById("redlist"); list.innerHTML="";
     var rows=REDS.filter(function(r){return r.status===sub;});
     if(rows.length===0){ list.innerHTML='<div class="empty">Nenhum resgate nesta fila.</div>'; }
@@ -308,93 +327,106 @@
         '<div class="co">'+coinImg(15)+fmt(r.coins)+'</div>'+
         '<div class="dt">'+r.date+' <span class="pill '+r.status+'">'+r.status+'</span></div>'+
         '<div class="acts">'+acts+'</div>'+
-        (r.addr?('<div class="addr" id="ad-'+r.id+'"><b>'+r.addr.nome+'</b> · '+r.addr.cpf+' · '+r.addr.tel+'<br>'+
-          r.addr.rua+', '+r.addr.num+(r.addr.comp?' - '+r.addr.comp:'')+'<br>'+
-          r.addr.bairro+' · '+r.addr.cidade+'/'+r.addr.uf+' · CEP '+r.addr.cep+'</div>'):'');
+        (r.addr?('<div class="addr" id="ad-'+r.id+'"><b>'+r.addr.nome+'</b> · '+(r.addr.cpf||'')+' · '+(r.addr.tel||'')+'<br>'+
+          (r.addr.rua||'')+', '+(r.addr.num||'')+(r.addr.comp?' - '+r.addr.comp:'')+'<br>'+
+          (r.addr.bairro||'')+' · '+(r.addr.cidade||'')+'/'+(r.addr.uf||'')+' · CEP '+(r.addr.cep||'')+'</div>'):'');
       list.appendChild(el);
     });
     renderStock();
   }
-
   function toggleAddr(id){ var a=document.getElementById("ad-"+id); if(a) a.classList.toggle("show"); }
 
+  // ---------- AÇÕES (gravam no banco) ----------
+  async function approve(id){ var res=await sb.rpc("redemption_approve",{p_id:id,p_staff:staffEmail}); if(res.error){toast("Erro: "+res.error.message);return;} toast("Resgate aprovado."); await refresh(); }
+  async function deliver(id){ var res=await sb.rpc("redemption_deliver",{p_id:id}); if(res.error){toast("Erro: "+res.error.message);return;} toast("Marcado como entregue."); await refresh(); }
+  function openReject(id){ ctx=id; var r=find(id); document.getElementById("reject-info").textContent=r.item+" · "+r.cli+" · "+fmt(r.coins)+" IC"; document.getElementById("reject-reason").value=""; openOv("ov-reject"); }
+  async function confirmReject(){ var res=await sb.rpc("redemption_reject",{p_id:ctx,p_staff:staffEmail,p_reason:document.getElementById("reject-reason").value}); closeOv("ov-reject"); if(res.error){toast("Erro: "+res.error.message);return;} toast("Coins devolvidos ao cliente."); await refresh(); }
+  function openShip(id){ ctx=id; var r=find(id); document.getElementById("ship-info").textContent=r.item+" · "+r.cli; document.getElementById("ship-track").value=""; openOv("ov-ship"); }
+  async function confirmShip(){ var res=await sb.rpc("redemption_ship",{p_id:ctx,p_staff:staffEmail,p_tracking:document.getElementById("ship-track").value||null}); closeOv("ov-ship"); if(res.error){toast("Erro: "+res.error.message);return;} toast("Envio confirmado."); await refresh(); }
   function find(id){ for(var i=0;i<REDS.length;i++) if(REDS[i].id===id) return REDS[i]; return null; }
 
-  function approve(id){ var r=find(id); if(!r)return; r.status="aprovado"; toast("Resgate de "+r.cli+" aprovado."); render(); }
-  function deliver(id){ var r=find(id); if(!r)return; r.status="entregue"; toast("Marcado como entregue."); render(); }
-
-  function openReject(id){ ctx=id; var r=find(id); document.getElementById("reject-info").textContent=r.item+" · "+r.cli+" · "+fmt(r.coins)+" IC"; document.getElementById("reject-reason").value=""; openOv("ov-reject"); }
-  function confirmReject(){ var r=find(ctx); if(!r)return; r.status="recusado"; r.note=document.getElementById("reject-reason").value; closeOv("ov-reject"); toast(fmt(r.coins)+" IC devolvidos a "+r.cli+"."); render(); }
-
-  function openShip(id){ ctx=id; var r=find(id); document.getElementById("ship-info").textContent=r.item+" · "+r.cli; document.getElementById("ship-track").value=""; openOv("ov-ship"); }
-  function confirmShip(){ var r=find(ctx); if(!r)return; r.status="enviado"; r.tracking=document.getElementById("ship-track").value||null; closeOv("ov-ship"); toast("Envio confirmado."); render(); }
-
-  // ESTOQUE
+  // ---------- ESTOQUE ----------
   function renderStock(){
     var sl=document.getElementById("stocklist"); if(!sl)return; sl.innerHTML="";
     CATALOG.forEach(function(c){
       var el=document.createElement("div"); el.className="strow"+(c.active?"":" st-off");
-      var stockCell = c.stock===null
-        ? '<span class="dt">ilimitado</span>'
+      var stockCell = c.stock===null ? '<span class="dt">ilimitado</span>'
         : '<input class="stkinput" type="number" value="'+c.stock+'" onchange="setStock(\''+c.id+'\',this.value)"/>';
       el.innerHTML =
         '<div style="display:flex;align-items:center;gap:11px">'+
           '<span class="thumb" title="Enviar/trocar foto" onclick="pickImg(\''+c.id+'\')">'+(c.img?'<img src="'+c.img+'"/>':'+')+'</span>'+
-          '<div><div class="st-name">'+c.name+'</div><div class="st-cat">'+c.cat+'</div></div>'+
-        '</div>'+
+          '<div><div class="st-name">'+c.name+'</div><div class="st-cat">'+c.cat+'</div></div></div>'+
         '<div class="co">'+coinImg(15)+fmt(c.price)+'</div>'+
         '<div>'+stockCell+'</div>'+
-        '<div><button class="btn sm" onclick="toggleActive(\''+c.id+'\')">'+(c.active?"Ativo":"Inativo")+'</button></div>'+
+        '<div><button class="btn sm" onclick="toggleActive(\''+c.id+'\','+(!c.active)+')">'+(c.active?"Ativo":"Inativo")+'</button></div>'+
         '<div class="acts"><button class="btn no sm" onclick="removeItem(\''+c.id+'\')">Remover</button></div>';
       sl.appendChild(el);
     });
   }
-  function setStock(id,v){ for(var i=0;i<CATALOG.length;i++) if(CATALOG[i].id===id){CATALOG[i].stock=parseInt(v)||0;} kpis(); toast("Estoque atualizado."); }
-  function toggleActive(id){ for(var i=0;i<CATALOG.length;i++) if(CATALOG[i].id===id){CATALOG[i].active=!CATALOG[i].active;} render(); }
-  function removeItem(id){ if(!confirm("Remover este item da loja?"))return; CATALOG=CATALOG.filter(function(c){return c.id!==id;}); render(); toast("Item removido."); }
-  var addImgData = null;
-  var currentImgId = null;
-  function openAdd(){
-    document.getElementById("add-name").value="";
-    document.getElementById("add-price").value="";
-    document.getElementById("add-stock").value="";
-    document.getElementById("add-img").value="";
-    var p=document.getElementById("add-img-preview"); p.style.display="none"; p.src="";
-    addImgData=null;
-    openOv("ov-add");
-  }
-  function previewAddImg(input){
-    if(input.files && input.files[0]){
-      var reader=new FileReader();
-      reader.onload=function(e){ addImgData=e.target.result; var p=document.getElementById("add-img-preview"); p.src=addImgData; p.style.display="block"; };
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
-  function saveItem(){
+  async function setStock(id,v){ var res=await sb.from("rewards_catalog").update({stock:parseInt(v)||0}).eq("id",id); if(res.error){toast("Erro: "+res.error.message);return;} toast("Estoque atualizado."); await refresh(); }
+  async function toggleActive(id,val){ var res=await sb.from("rewards_catalog").update({active:val}).eq("id",id); if(res.error){toast("Erro: "+res.error.message);return;} await refresh(); }
+  async function removeItem(id){ if(!confirm("Remover este item da loja?"))return; var res=await sb.from("rewards_catalog").update({active:false}).eq("id",id); if(res.error){toast("Erro: "+res.error.message);return;} toast("Item desativado."); await refresh(); }
+  function openAdd(){ document.getElementById("add-name").value=""; document.getElementById("add-price").value=""; document.getElementById("add-stock").value=""; document.getElementById("add-img").value=""; var p=document.getElementById("add-img-preview"); p.style.display="none"; p.src=""; addImgData=null; openOv("ov-add"); }
+  function previewAddImg(input){ if(input.files&&input.files[0]){ var reader=new FileReader(); reader.onload=function(e){ addImgData=e.target.result; var p=document.getElementById("add-img-preview"); p.src=addImgData; p.style.display="block"; }; reader.readAsDataURL(input.files[0]); } }
+  async function saveItem(){
     var name=document.getElementById("add-name").value.trim();
     var price=parseInt(document.getElementById("add-price").value);
     var stk=document.getElementById("add-stock").value;
     var cat=document.getElementById("add-cat").value;
     if(!name||!price){ toast("Preencha nome e preço."); return; }
-    CATALOG.push({id:"n"+Date.now(),name:name,cat:cat,price:price,stock:stk===""?null:parseInt(stk),active:true,img:addImgData});
-    closeOv("ov-add"); toast("Item cadastrado."); render();
+    var btn=document.getElementById("add-save"); btn.disabled=true; btn.textContent="Salvando…";
+    var img_url = null;
+    if(addImgData){ img_url = await uploadImg(addImgData); }
+    var res=await sb.from("rewards_catalog").insert({name:name,category:cat,coin_price:price,stock:stk===""?null:parseInt(stk),active:true,image_url:img_url});
+    btn.disabled=false; btn.textContent="Salvar item";
+    if(res.error){ toast("Erro: "+res.error.message); return; }
+    closeOv("ov-add"); toast("Item cadastrado."); await refresh();
   }
   function pickImg(id){ currentImgId=id; document.getElementById("rowImgInput").click(); }
-  function rowImgChange(input){
-    if(input.files && input.files[0]){
+  async function rowImgChange(input){
+    if(input.files&&input.files[0]){
       var reader=new FileReader();
-      reader.onload=function(e){
-        for(var i=0;i<CATALOG.length;i++){ if(CATALOG[i].id===currentImgId){ CATALOG[i].img=e.target.result; } }
-        input.value=""; renderStock(); toast("Foto atualizada.");
+      reader.onload=async function(e){
+        var url=await uploadImg(e.target.result);
+        if(url){ var res=await sb.from("rewards_catalog").update({image_url:url}).eq("id",currentImgId); if(!res.error){ toast("Foto atualizada."); await refresh(); } else { toast("Erro: "+res.error.message); } }
+        input.value="";
       };
       reader.readAsDataURL(input.files[0]);
     }
   }
+  // upload da imagem pro Supabase Storage (bucket product-images)
+  async function uploadImg(dataUrl){
+    try{
+      var blob = await (await fetch(dataUrl)).blob();
+      var ext = (blob.type.split("/")[1]||"png");
+      var path = "prod_"+Date.now()+"."+ext;
+      var up = await sb.storage.from("product-images").upload(path, blob, {contentType:blob.type, upsert:true});
+      if(up.error){ toast("Erro no upload: "+up.error.message); return null; }
+      var pub = sb.storage.from("product-images").getPublicUrl(path);
+      return pub.data.publicUrl;
+    }catch(e){ toast("Falha no upload da foto."); return null; }
+  }
 
-  function openOv(id){ document.getElementById(id).classList.add("show"); }
-  function closeOv(id){ document.getElementById(id).classList.remove("show"); }
-
-  render();
+  // ---------- BOOT ----------
+  async function boot(){
+    showView("loading");
+    var s = await sb.auth.getSession();
+    if(!s.data.session){ showView("login"); return; }
+    var email = s.data.session.user.email;
+    var ok = await isStaff(email);
+    if(!ok){
+      await sb.auth.signOut();
+      showView("login");
+      var msg=document.getElementById("login-msg"); msg.className="login-msg err";
+      msg.textContent="Este e-mail não tem acesso ao painel de controle.";
+      return;
+    }
+    staffEmail = email;
+    document.getElementById("whoami").textContent = email;
+    showView("app");
+    await refresh();
+  }
+  boot();
 </script>
 </body>
 </html>
