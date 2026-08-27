@@ -358,6 +358,23 @@
   </div>
 </div>
 
+<!-- popup: não é cliente -->
+<div class="ov" id="ov-notclient">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div style="width:56px;height:56px;border-radius:16px;margin:4px auto 16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,252,132,.16),rgba(0,252,132,.04));border:1px solid rgba(0,252,132,.3)">
+      <img src="logo.png" alt="" style="width:30px;height:30px" />
+    </div>
+    <h3 style="margin-bottom:10px">Você ainda não faz parte do Insider Rewards</h3>
+    <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:4px">
+      Vimos que este e-mail ainda não está na nossa base de clientes. Para participar do programa de recompensas, adquira um dos planos da Insider Investe e comece a acumular Insider Coins.
+    </p>
+    <div class="m-actions">
+      <button class="m-btn ghost" onclick="hide('ov-notclient')">Fechar</button>
+      <a class="m-btn go" id="planos-link" href="https://insiderinveste.com" target="_blank" rel="noopener" style="text-decoration:none;display:flex;align-items:center;justify-content:center">Conhecer os planos</a>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -384,7 +401,16 @@
     var msg = document.getElementById("login-msg"), btn = document.getElementById("login-btn");
     msg.className = "login-msg";
     if(!email || email.indexOf("@")<0){ msg.className="login-msg err"; msg.textContent="Digite um e-mail válido."; return; }
-    btn.disabled = true; btn.textContent = "Enviando…";
+    btn.disabled = true; btn.textContent = "Verificando…";
+    // clube fechado: só clientes na base recebem o link
+    var chk = await sb.rpc("email_e_cliente", { p_email: email });
+    if(chk.error){ btn.disabled=false; btn.textContent="Enviar link de acesso"; msg.className="login-msg err"; msg.textContent="Não foi possível verificar agora. Tente novamente."; return; }
+    if(chk.data !== true){
+      btn.disabled=false; btn.textContent="Enviar link de acesso";
+      show("ov-notclient");
+      return;
+    }
+    btn.textContent = "Enviando…";
     var res = await sb.auth.signInWithOtp({ email: email, options:{ emailRedirectTo: window.location.href.split('#')[0] } });
     btn.disabled = false; btn.textContent = "Enviar link de acesso";
     if(res.error){ msg.className="login-msg err"; msg.textContent="Erro: "+res.error.message; }
