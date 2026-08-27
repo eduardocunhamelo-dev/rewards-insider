@@ -38,7 +38,7 @@
   .brand .mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
     background:linear-gradient(135deg,rgba(0,252,132,.22),rgba(0,252,132,.05));
     border:1px solid rgba(0,252,132,.3)}
-  .brand .mark img{width:20px;height:20px}
+  .brand .mark img{height:20px;width:auto;max-width:24px}
   .brand b{font-family:Archivo;font-weight:800;font-size:16px;letter-spacing:.02em}
   .brand b span{color:var(--green)}
   .topbar-right{display:flex;align-items:center;gap:12px}
@@ -63,7 +63,7 @@
     color:var(--muted);letter-spacing:.02em}
   .hero-head h1{font-family:Archivo;font-weight:800;font-size:clamp(26px,4vw,34px);
     letter-spacing:-.01em;margin:10px 0 8px;display:flex;align-items:center;gap:12px}
-  .hero-head h1 img{width:30px;height:30px}
+  .hero-head h1 img{height:30px;width:auto}
   .hero-head h1 span{color:var(--green)}
   .hero-head p{color:var(--muted);font-size:15px;max-width:640px;line-height:1.55}
 
@@ -362,7 +362,7 @@
 <div class="ov" id="ov-notclient">
   <div class="modal" style="max-width:420px;text-align:center">
     <div style="width:56px;height:56px;border-radius:16px;margin:4px auto 16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,252,132,.16),rgba(0,252,132,.04));border:1px solid rgba(0,252,132,.3)">
-      <img src="logo.png" alt="" style="width:30px;height:30px" />
+      <img src="logo.png" alt="" style="height:30px;width:auto" />
     </div>
     <h3 style="margin-bottom:10px">Você ainda não faz parte do Insider Rewards</h3>
     <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:4px">
@@ -431,16 +431,17 @@
   async function refresh(){ await Promise.all([loadCatalog(), loadBalance(), loadLedger()]); render(); }
 
   // ---------- RENDER ----------
-  var CATS = ["todos","físico","digital","cupom"];
-  var BADGE = { "físico":"b-fisico", "digital":"b-digital", "cupom":"b-cupom" };
+  var CATS = [{k:"todos",lbl:"Todos"},{k:"fisico",lbl:"Físico"},{k:"digital",lbl:"Digital"},{k:"cupom",lbl:"Cupom"}];
+  var BADGE = { "fisico":"b-fisico", "digital":"b-digital", "cupom":"b-cupom" };
+  var CATLBL = { "fisico":"Físico", "digital":"Digital", "cupom":"Cupom" };
   function render(){
     document.getElementById("balPill").textContent = fmt(balance);
     document.getElementById("balHero").textContent = fmt(balance);
 
     var tabs=document.getElementById("tabs"); tabs.innerHTML="";
     CATS.forEach(function(c){
-      var b=document.createElement("button"); b.className="tab"+(filter===c?" on":""); b.textContent=c;
-      b.onclick=function(){ filter=c; render(); }; tabs.appendChild(b);
+      var b=document.createElement("button"); b.className="tab"+(filter===c.k?" on":""); b.textContent=c.lbl;
+      b.onclick=function(){ filter=c.k; render(); }; tabs.appendChild(b);
     });
 
     var list = CATALOG.filter(function(r){return filter==="todos"||r.cat===filter;});
@@ -451,6 +452,7 @@
       var can=balance>=r.price, out=r.stock!=null&&r.stock<=0, low=r.stock!=null&&r.stock>0&&r.stock<=10;
       var el=document.createElement("div"); el.className="card"+(can&&!out?"":" locked");
       var badgeClass = BADGE[r.cat]||"b-fisico";
+      var catLabel = CATLBL[r.cat] || r.cat;
       var stockHtml = r.stock!=null ? '<span class="stock'+(low?' low':'')+'">'+r.stock+' un. disponíveis</span>' : '<span class="stock" style="color:var(--muted2)">estoque livre</span>';
       var action = out ? '<div class="out">Esgotado no momento</div>'
         : can ? '<button class="cta" data-id="'+r.id+'">'+coinHTML(17)+' Resgatar com Coins</button>'
@@ -459,7 +461,7 @@
         ? '<div class="photo" style="background-image:url('+JSON.stringify(r.img)+')"></div>'
         : '<div class="photo">'+coinHTML(52).replace('vertical-align:middle','vertical-align:middle;opacity:.4')+'</div>';
       el.innerHTML =
-        '<div class="badgerow"><span class="badge '+badgeClass+'"><span class="b-dot"></span>'+r.cat+'</span></div>'+
+        '<div class="badgerow"><span class="badge '+badgeClass+'"><span class="b-dot"></span>'+catLabel+'</span></div>'+
         photo+
         '<div class="nm">'+r.name+'</div>'+
         '<div class="price-row">'+
@@ -495,7 +497,7 @@
   }
   function confirmStep(){
     hide("ov-confirm");
-    if(pending.cat === "físico"){
+    if(pending.cat === "fisico"){
       document.getElementById("a-terms").checked = false;
       document.getElementById("addr-submit").disabled = true;
       show("ov-addr");
