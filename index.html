@@ -458,7 +458,7 @@
         : can ? '<button class="cta" data-id="'+r.id+'">'+coinHTML(17)+' Resgatar com Coins</button>'
         : '<div class="miss">Faltam <b>'+fmt(r.price-balance)+'</b> Insider Coins</div>';
       var photo = r.img
-        ? '<div class="photo" style="background-image:url('+JSON.stringify(r.img)+')"></div>'
+        ? '<div class="photo" style="background-image:url(\''+String(r.img).replace(/'/g,"%27")+'\')"></div>'
         : '<div class="photo">'+coinHTML(52).replace('vertical-align:middle','vertical-align:middle;opacity:.4')+'</div>';
       el.innerHTML =
         '<div class="badgerow"><span class="badge '+badgeClass+'"><span class="b-dot"></span>'+catLabel+'</span></div>'+
