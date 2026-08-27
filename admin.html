@@ -216,7 +216,7 @@
   <h3>Cadastrar item</h3><p>Preencha os dados do novo brinde da loja.</p>
   <label>Nome do item</label><input id="add-name" placeholder="Ex.: Camiseta Insider Preta" />
   <div class="grid2">
-    <div><label>Categoria</label><select id="add-cat"><option value="físico">Físico</option><option value="digital">Digital</option><option value="cupom">Cupom</option></select></div>
+    <div><label>Categoria</label><select id="add-cat"><option value="fisico">Físico</option><option value="digital">Digital</option><option value="cupom">Cupom</option></select></div>
     <div><label>Preço em coins</label><input id="add-price" type="number" placeholder="7000" /></div>
   </div>
   <label>Estoque (vazio = ilimitado)</label><input id="add-stock" type="number" placeholder="150" />
@@ -225,6 +225,20 @@
   <img id="add-img-preview" style="display:none;margin-top:10px;max-height:130px;border-radius:10px;border:1px solid var(--line)" />
   <div class="actions"><button class="btn" onclick="closeOv('ov-add')">Cancelar</button>
   <button class="btn ok" id="add-save" onclick="saveItem()">Salvar item</button></div>
+</div></div>
+
+<div class="ov" id="ov-edit"><div class="modal">
+  <h3>Editar item</h3><p>Ajuste os dados do brinde. As mudanças aparecem na loja na hora.</p>
+  <label>Nome do item</label><input id="edit-name" />
+  <div class="grid2">
+    <div><label>Categoria</label><select id="edit-cat"><option value="fisico">Físico</option><option value="digital">Digital</option><option value="cupom">Cupom</option></select></div>
+    <div><label>Preço em coins</label><input id="edit-price" type="number" /></div>
+  </div>
+  <label>Foto do produto</label>
+  <input id="edit-img" type="file" accept="image/*" onchange="previewEditImg(this)" />
+  <img id="edit-img-preview" style="display:none;margin-top:10px;max-height:130px;border-radius:10px;border:1px solid var(--line)" />
+  <div class="actions"><button class="btn" onclick="closeOv('ov-edit')">Cancelar</button>
+  <button class="btn ok" id="edit-save" onclick="saveEdit()">Salvar alterações</button></div>
 </div></div>
 
 <input type="file" id="rowImgInput" accept="image/*" style="display:none" onchange="rowImgChange(this)" />
@@ -359,7 +373,7 @@
         '<div class="co">'+coinImg(15)+fmt(c.price)+'</div>'+
         '<div>'+stockCell+'</div>'+
         '<div><button class="btn sm" onclick="toggleActive(\''+c.id+'\','+(!c.active)+')">'+(c.active?"Ativo":"Inativo")+'</button></div>'+
-        '<div class="acts"><button class="btn no sm" onclick="removeItem(\''+c.id+'\')">Remover</button></div>';
+        '<div class="acts"><button class="btn sm" onclick="openEdit(\''+c.id+'\')">Editar</button> <button class="btn no sm" onclick="removeItem(\''+c.id+'\')">Remover</button></div>';
       sl.appendChild(el);
     });
   }
@@ -383,6 +397,35 @@
     closeOv("ov-add"); toast("Item cadastrado."); await refresh();
   }
   function pickImg(id){ currentImgId=id; document.getElementById("rowImgInput").click(); }
+
+  // ---------- EDITAR ITEM ----------
+  var editId=null, editImgData=null;
+  function openEdit(id){
+    var c=null; for(var i=0;i<CATALOG.length;i++){ if(CATALOG[i].id===id){c=CATALOG[i];break;} }
+    if(!c) return;
+    editId=id; editImgData=null;
+    document.getElementById("edit-name").value=c.name;
+    document.getElementById("edit-price").value=c.price;
+    var sel=document.getElementById("edit-cat"); sel.value=c.cat;
+    document.getElementById("edit-img").value="";
+    var p=document.getElementById("edit-img-preview");
+    if(c.img){ p.src=c.img; p.style.display="block"; } else { p.style.display="none"; p.src=""; }
+    openOv("ov-edit");
+  }
+  function previewEditImg(input){ if(input.files&&input.files[0]){ var r=new FileReader(); r.onload=function(e){ editImgData=e.target.result; var p=document.getElementById("edit-img-preview"); p.src=editImgData; p.style.display="block"; }; r.readAsDataURL(input.files[0]); } }
+  async function saveEdit(){
+    var name=document.getElementById("edit-name").value.trim();
+    var price=parseInt(document.getElementById("edit-price").value);
+    var cat=document.getElementById("edit-cat").value;
+    if(!name||!price){ toast("Preencha nome e preço."); return; }
+    var btn=document.getElementById("edit-save"); btn.disabled=true; btn.textContent="Salvando…";
+    var patch={ name:name, coin_price:price, category:cat };
+    if(editImgData){ var url=await uploadImg(editImgData); if(url) patch.image_url=url; }
+    var res=await sb.from("rewards_catalog").update(patch).eq("id",editId);
+    btn.disabled=false; btn.textContent="Salvar alterações";
+    if(res.error){ toast("Erro: "+res.error.message); return; }
+    closeOv("ov-edit"); toast("Item atualizado."); await refresh();
+  }
   async function rowImgChange(input){
     if(input.files&&input.files[0]){
       var reader=new FileReader();
