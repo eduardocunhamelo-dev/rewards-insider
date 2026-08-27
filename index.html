@@ -225,6 +225,35 @@
     padding:14px 22px;border-radius:13px;font-size:14px;z-index:80;font-weight:500;
     box-shadow:0 16px 46px rgba(0,0,0,.55);opacity:0;transition:opacity .25s;pointer-events:none}
   .toast.show{opacity:1}
+
+  /* ---------- POPUP DETALHE ---------- */
+  .modal-detail{max-width:820px;padding:0;overflow:hidden;position:relative}
+  .dt-close{position:absolute;top:14px;right:14px;z-index:5;width:34px;height:34px;border-radius:9px;
+    border:1px solid var(--line2);background:rgba(5,7,10,.6);color:var(--muted);cursor:pointer;font-size:14px}
+  .dt-close:hover{color:var(--text);border-color:var(--green)}
+  .dt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  @media(max-width:680px){ .dt-grid{grid-template-columns:1fr} }
+  .dt-gallery{padding:22px;background:#080B10;border-right:1px solid var(--line)}
+  @media(max-width:680px){ .dt-gallery{border-right:0;border-bottom:1px solid var(--line)} }
+  .dt-main{height:280px;border-radius:14px;background:#0A1017 center/cover no-repeat;border:1px solid var(--line);
+    display:grid;place-items:center}
+  .dt-main.empty{opacity:1}
+  .dt-thumbs{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+  .dt-thumb{width:56px;height:56px;border-radius:9px;background:#0A1017 center/cover no-repeat;
+    border:1px solid var(--line);cursor:pointer;opacity:.7}
+  .dt-thumb.on,.dt-thumb:hover{opacity:1;border-color:var(--green)}
+  .dt-info{padding:26px 26px 24px;display:flex;flex-direction:column;gap:12px}
+  .dt-info h3{font-family:Archivo;font-weight:800;font-size:23px;line-height:1.2;margin-top:4px}
+  .dt-desc{font-size:13.5px;color:var(--muted);line-height:1.6}
+  .dt-price{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:28px;color:var(--gold-hi);
+    display:flex;align-items:center;gap:6px}
+  .dt-opt-label{font-size:12.5px;color:var(--muted);margin-bottom:8px;letter-spacing:.02em}
+  .dt-opt-row{display:flex;flex-wrap:wrap;gap:9px}
+  .dt-opt{padding:9px 16px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);
+    color:var(--text);font-family:Inter;font-size:13.5px;font-weight:600;cursor:pointer}
+  .dt-opt:hover{border-color:var(--green)}
+  .dt-opt.on{background:rgba(0,252,132,.14);border-color:var(--green);color:var(--green)}
+  .dt-redeem-btn{margin-top:auto}
 </style>
 </head>
 <body>
@@ -309,6 +338,27 @@
 
     <div class="shop-head"><h2>Meu extrato</h2></div>
     <div class="ledger" id="ledger"></div>
+  </div>
+</div>
+
+<!-- popup DETALHE do produto -->
+<div class="ov" id="ov-detail">
+  <div class="modal modal-detail">
+    <button class="dt-close" onclick="hide('ov-detail')">✕</button>
+    <div class="dt-grid">
+      <div class="dt-gallery">
+        <div class="dt-main empty" id="dt-main"></div>
+        <div class="dt-thumbs" id="dt-thumbs"></div>
+      </div>
+      <div class="dt-info">
+        <div id="dt-badge"></div>
+        <h3 id="dt-name">Produto</h3>
+        <p class="dt-desc" id="dt-desc"></p>
+        <div class="dt-price mono" id="dt-price"></div>
+        <div id="dt-options"></div>
+        <button class="m-btn go dt-redeem-btn" id="dt-redeem" onclick="detailRedeem()">Resgatar com Coins</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -420,8 +470,8 @@
 
   // ---------- DADOS ----------
   async function loadCatalog(){
-    var res = await sb.from("rewards_catalog").select("id,name,category,coin_price,stock,image_url,active").eq("active",true).order("coin_price");
-    CATALOG = (res.data||[]).map(function(r){ return { id:r.id, name:r.name, cat:r.category, price:r.coin_price, stock:r.stock, img:r.image_url }; });
+    var res = await sb.from("rewards_catalog").select("id,name,category,coin_price,stock,image_url,active,options,gallery,description").eq("active",true).order("coin_price");
+    CATALOG = (res.data||[]).map(function(r){ return { id:r.id, name:r.name, cat:r.category, price:r.coin_price, stock:r.stock, img:r.image_url, options:r.options, gallery:r.gallery, desc:r.description }; });
   }
   async function loadBalance(){ var res = await sb.rpc("my_balance"); balance = (res.error? 0 : (res.data||0)); }
   async function loadLedger(){
@@ -455,11 +505,13 @@
       var catLabel = CATLBL[r.cat] || r.cat;
       var stockHtml = r.stock!=null ? '<span class="stock'+(low?' low':'')+'">'+r.stock+' un. disponíveis</span>' : '<span class="stock" style="color:var(--muted2)">estoque livre</span>';
       var action = out ? '<div class="out">Esgotado no momento</div>'
-        : can ? '<button class="cta" data-id="'+r.id+'">'+coinHTML(17)+' Resgatar com Coins</button>'
+        : can ? '<button class="cta" data-detail="'+r.id+'">'+coinHTML(17)+' Resgatar com Coins</button>'
         : '<div class="miss">Faltam <b>'+fmt(r.price-balance)+'</b> Insider Coins</div>';
       var photo = r.img
         ? '<div class="photo" style="background-image:url(\''+String(r.img).replace(/'/g,"%27")+'\')"></div>'
         : '<div class="photo">'+coinHTML(52).replace('vertical-align:middle','vertical-align:middle;opacity:.4')+'</div>';
+      el.style.cursor="pointer";
+      el.setAttribute("data-open", r.id);
       el.innerHTML =
         '<div class="badgerow"><span class="badge '+badgeClass+'"><span class="b-dot"></span>'+catLabel+'</span></div>'+
         photo+
@@ -471,7 +523,9 @@
         action;
       grid.appendChild(el);
     });
-    grid.querySelectorAll("button[data-id]").forEach(function(btn){ btn.onclick=function(){ openConfirm(btn.getAttribute("data-id")); }; });
+    // clique no card (ou no botao) abre o detalhe do produto
+    grid.querySelectorAll("[data-open]").forEach(function(el){ el.onclick=function(){ openDetail(el.getAttribute("data-open")); }; });
+    grid.querySelectorAll("button[data-detail]").forEach(function(btn){ btn.onclick=function(ev){ ev.stopPropagation(); openDetail(btn.getAttribute("data-detail")); }; });
 
     var lg=document.getElementById("ledger"); lg.innerHTML="";
     if(ledger.length===0){ lg.innerHTML='<div class="empty">Nenhuma movimentação ainda. Suas compras creditam Insider Coins automaticamente.</div>'; }
@@ -481,6 +535,80 @@
         +'<div class="l-amt '+(e.amt>0?"up":"down")+'">'+(e.amt>0?"+":"")+fmt(e.amt)+' IC</div>';
       lg.appendChild(row);
     });
+  }
+
+  // ---------- DETALHE DO PRODUTO ----------
+  var selectedOption = null;
+  function openDetail(id){
+    var r=null; for(var i=0;i<CATALOG.length;i++){ if(CATALOG[i].id===id){r=CATALOG[i];break;} }
+    if(!r) return;
+    pending = r; selectedOption = null;
+
+    // galeria: foto principal + extras
+    var fotos = [];
+    if(r.img) fotos.push(r.img);
+    if(r.gallery){ String(r.gallery).split(",").forEach(function(u){ u=u.trim(); if(u) fotos.push(u); }); }
+
+    var mainImg = document.getElementById("dt-main");
+    if(fotos.length){ mainImg.style.backgroundImage="url('"+fotos[0].replace(/'/g,"%27")+"')"; mainImg.classList.remove("empty"); mainImg.innerHTML=""; }
+    else { mainImg.style.backgroundImage="none"; mainImg.classList.add("empty"); mainImg.innerHTML=coinHTML(60); }
+
+    // miniaturas
+    var thumbs=document.getElementById("dt-thumbs"); thumbs.innerHTML="";
+    if(fotos.length>1){
+      fotos.forEach(function(u,idx){
+        var t=document.createElement("div"); t.className="dt-thumb"+(idx===0?" on":"");
+        t.style.backgroundImage="url('"+u.replace(/'/g,"%27")+"')";
+        t.onclick=function(){ mainImg.style.backgroundImage="url('"+u.replace(/'/g,"%27")+"')"; thumbs.querySelectorAll(".dt-thumb").forEach(function(x){x.classList.remove("on");}); t.classList.add("on"); };
+        thumbs.appendChild(t);
+      });
+    }
+
+    document.getElementById("dt-badge").innerHTML='<span class="badge '+(BADGE[r.cat]||"b-fisico")+'"><span class="b-dot"></span>'+(CATLBL[r.cat]||r.cat)+'</span>';
+    document.getElementById("dt-name").textContent=r.name;
+    document.getElementById("dt-desc").textContent=r.desc||"";
+    document.getElementById("dt-desc").style.display=r.desc?"block":"none";
+    document.getElementById("dt-price").innerHTML=coinHTML(22)+fmt(r.price)+" <span style='font-size:13px;color:var(--muted)'>Insider Coins</span>";
+
+    // variações (cor/tamanho)
+    var optWrap=document.getElementById("dt-options"); optWrap.innerHTML="";
+    var opts = r.options ? String(r.options).split(",").map(function(o){return o.trim();}).filter(Boolean) : [];
+    if(opts.length){
+      var lbl=document.createElement("div"); lbl.className="dt-opt-label"; lbl.textContent="Escolha uma opção:"; optWrap.appendChild(lbl);
+      var row=document.createElement("div"); row.className="dt-opt-row";
+      opts.forEach(function(o){
+        var b=document.createElement("button"); b.className="dt-opt"; b.textContent=o;
+        b.onclick=function(){ selectedOption=o; row.querySelectorAll(".dt-opt").forEach(function(x){x.classList.remove("on");}); b.classList.add("on"); updateDetailBtn(); };
+        row.appendChild(b);
+      });
+      optWrap.appendChild(row);
+    }
+
+    var canBuy = balance>=r.price && !(r.stock!=null&&r.stock<=0);
+    var btn=document.getElementById("dt-redeem");
+    if(r.stock!=null&&r.stock<=0){ btn.textContent="Esgotado"; btn.disabled=true; }
+    else if(balance<r.price){ btn.textContent="Faltam "+fmt(r.price-balance)+" IC"; btn.disabled=true; }
+    else { btn.disabled=false; updateDetailBtn(); }
+    btn.dataset.hasopts = opts.length ? "1" : "0";
+
+    show("ov-detail");
+  }
+  function updateDetailBtn(){
+    var btn=document.getElementById("dt-redeem");
+    if(btn.dataset.hasopts==="1" && !selectedOption){ btn.textContent="Selecione uma opção acima"; btn.disabled=true; }
+    else { btn.innerHTML=coinHTML(17)+" Resgatar com Coins"; btn.disabled=false; }
+  }
+  function detailRedeem(){
+    if(!pending) return;
+    var opts = pending.options ? String(pending.options).split(",").filter(function(o){return o.trim();}) : [];
+    if(opts.length && !selectedOption){ toast("Escolha uma opção antes de resgatar."); return; }
+    hide("ov-detail");
+    // segue pro fluxo de confirmação normal (endereço + termos p/ físico)
+    document.getElementById("cf-name").textContent = pending.name + (selectedOption? " — "+selectedOption : "");
+    document.getElementById("cf-cat").textContent = "Categoria: "+pending.cat;
+    document.getElementById("cf-price").textContent = fmt(pending.price)+" IC";
+    document.getElementById("cf-after").textContent = fmt(balance - pending.price)+" IC";
+    show("ov-confirm");
   }
 
   // ---------- RESGATE ----------
@@ -510,16 +638,19 @@
     f.forEach(function(k){ var v=document.getElementById("a-"+k).value.trim(); addr[k]=v; if(!v) ok=false; });
     addr.comp = document.getElementById("a-comp").value.trim();
     addr.terms_accepted = true; addr.terms_accepted_at = new Date().toISOString();
+    if(selectedOption) addr.variacao = selectedOption;
     if(!ok){ toast("Preencha todos os campos do endereço."); return; }
     hide("ov-addr");
     finalizeRedeem(addr);
   }
   async function finalizeRedeem(addr){
     var r = pending;
+    // para itens digitais sem endereço, ainda registra a variação se houver
+    if(!addr && selectedOption){ addr = { variacao: selectedOption }; }
     var res = await sb.rpc("redeem_my", { p_reward: r.id, p_shipping: addr });
     if(res.error){ toast("Não foi possível resgatar: "+res.error.message); return; }
     toast("Solicitação enviada — aguardando aprovação da Insider.");
-    pending = null; await refresh();
+    pending = null; selectedOption = null; await refresh();
   }
 
   // ---------- BOOT ----------
