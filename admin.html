@@ -104,6 +104,11 @@
 
   .stock-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:12px}
   .stock-head h3{font-family:Archivo;font-size:14px;letter-spacing:.1em;text-transform:uppercase}
+  .stock-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .stfilter{border:1px solid var(--line2);background:var(--surface);color:var(--muted);
+    font-family:Inter;font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer}
+  .stfilter:hover{color:var(--text)}
+  .stfilter.on{background:rgba(0,252,132,.14);color:var(--green);border-color:rgba(0,252,132,.35)}
   .strow{display:grid;grid-template-columns:2fr 1fr 1fr 1.1fr auto;gap:14px;align-items:center;
     padding:14px 18px;border-bottom:1px solid var(--line)}
   .strow:last-child{border-bottom:0}
@@ -191,6 +196,7 @@
       <h3>Catálogo &amp; estoque</h3>
       <button class="btn ok" onclick="openAdd()">+ Cadastrar item</button>
     </div>
+    <div class="stock-filters" id="stock-filters"></div>
     <div class="card">
       <div class="strow head"><div>Item</div><div>Preço (IC)</div><div>Estoque</div><div>Status</div><div></div></div>
       <div id="stocklist"></div>
@@ -369,16 +375,34 @@
   function find(id){ for(var i=0;i<REDS.length;i++) if(REDS[i].id===id) return REDS[i]; return null; }
 
   // ---------- ESTOQUE ----------
+  var stockFilter = "todos";
+  var STCATS = [{k:"todos",lbl:"Todos"},{k:"fisico",lbl:"Físico"},{k:"digital",lbl:"Digital"},{k:"cupom",lbl:"Cupom"}];
+  var STLBL = {"fisico":"Físico","digital":"Digital","cupom":"Cupom"};
   function renderStock(){
+    // abas de filtro
+    var ff=document.getElementById("stock-filters");
+    if(ff){
+      ff.innerHTML="";
+      STCATS.forEach(function(c){
+        var count = c.k==="todos" ? CATALOG.length : CATALOG.filter(function(x){return x.cat===c.k;}).length;
+        var b=document.createElement("button");
+        b.className="stfilter"+(stockFilter===c.k?" on":"");
+        b.textContent=c.lbl+" ("+count+")";
+        b.onclick=function(){ stockFilter=c.k; renderStock(); };
+        ff.appendChild(b);
+      });
+    }
     var sl=document.getElementById("stocklist"); if(!sl)return; sl.innerHTML="";
-    CATALOG.forEach(function(c){
+    var list = CATALOG.filter(function(c){ return stockFilter==="todos" || c.cat===stockFilter; });
+    if(list.length===0){ sl.innerHTML='<div style="padding:26px;text-align:center;color:var(--muted);font-size:13.5px">Nenhum item nesta categoria.</div>'; return; }
+    list.forEach(function(c){
       var el=document.createElement("div"); el.className="strow"+(c.active?"":" st-off");
       var stockCell = c.stock===null ? '<span class="dt">ilimitado</span>'
         : '<input class="stkinput" type="number" value="'+c.stock+'" onchange="setStock(\''+c.id+'\',this.value)"/>';
       el.innerHTML =
         '<div style="display:flex;align-items:center;gap:11px">'+
           '<span class="thumb" title="Enviar/trocar foto" onclick="pickImg(\''+c.id+'\')">'+(c.img?'<img src="'+c.img+'"/>':'+')+'</span>'+
-          '<div><div class="st-name">'+c.name+'</div><div class="st-cat">'+c.cat+'</div></div></div>'+
+          '<div><div class="st-name">'+c.name+'</div><div class="st-cat">'+(STLBL[c.cat]||c.cat)+'</div></div></div>'+
         '<div class="co">'+coinImg(15)+fmt(c.price)+'</div>'+
         '<div>'+stockCell+'</div>'+
         '<div><button class="btn sm" onclick="toggleActive(\''+c.id+'\','+(!c.active)+')">'+(c.active?"Ativo":"Inativo")+'</button></div>'+
